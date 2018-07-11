@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+librem-buildbot.so
+librem-buildbot.dylib
+librem-buildbot.dll
+librem-buildbot.a
+librem-buildbot.lib
+librem-buildbot-test-*
+*.exe
+*.o
+*.obj
+*.lst
