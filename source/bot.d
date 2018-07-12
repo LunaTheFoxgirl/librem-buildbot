@@ -131,7 +131,7 @@ public class MatrixBOT {
 	public void SendMessage(string roomid, JobDescrRoot root, bool avoid_resend = true) {
 		if (avoid_resend && root.number == BuildID) return;
 		string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName).replace(" ", "%20");
-		SendMessage(roomid, Format("<b><0>'s queued QEMU buildhas completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
+		SendMessage(roomid, Format("<b><0>'s queued QEMU build has completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
 	}
 
 	public void SendMessage(string roomid, string message) {
