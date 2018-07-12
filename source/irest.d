@@ -39,6 +39,7 @@ public interface JenkinsRestJobDescription {
 		JobResult result;
 		ulong timestamp;
 		string url;
+		Curlpit[] curlpits;
 	}
 
 	struct Curlpit {

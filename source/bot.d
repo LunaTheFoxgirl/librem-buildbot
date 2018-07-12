@@ -1,9 +1,13 @@
 module bot;
 import matrix.api;
 import std.json;
+import std.string;
+import std.array;
 import core.thread;
 import rest;
 import irest;
+import std.algorithm;
+import format;
 
 alias JobDescrRoot = JenkinsRestJobDescription.Root;
 
@@ -14,7 +18,8 @@ public class MatrixBOT {
 	public string BotToken;
 
 	public int BuildID = 0;
-	public string TargetRoomID;
+	public string[] Rooms;
+	public string[] Administrators;
 	public int UpdateRate = 100;
 
 	JSONValue config;
@@ -35,7 +40,22 @@ public class MatrixBOT {
 
 		// Set newly generated token.
 		this.BotToken = this.API.token;
-		foreach (roomId; API.getRooms) {
+
+		string[] rooms = API.getRooms;
+		foreach(JSONValue room; extraConfig["rooms"].array()) {
+			Rooms ~= room.str;
+			if (rooms.canFind(room.str)) {
+				JoinRoom(room.str);
+			}
+		}
+
+		foreach(JSONValue admin; extraConfig["admins"].array()) {
+			Administrators ~= admin.str;
+		}
+
+		// Update, in case new rooms were joined.
+		rooms = API.getRooms;
+		foreach (roomId; rooms) {
 			this.API.roomListener(new RoomListener(roomId, &onRoom));
 		}
 	}
@@ -49,20 +69,66 @@ public class MatrixBOT {
 		if (updateCounter < 0) {
 			updateCounter = UpdateRate;
 			JobDescrBox root = GetJenkinsInfo();
-		}
-	}
-
-	public void onRoom(MatrixAPI api, string room, JSONValue context) {
-		if (context["sender"].str != api.userId) {
-			if (context["content"]["body"].str == "!buildinfo") {
-				SendMessage(room, "*Wait a second, querying jenkins...*");
-				JobDescrBox root = GetJenkinsInfo();
+			foreach(room; API.getRooms) {
+				if (root is null) {
+					SendMessage(room, "**ERROR** Could not find any builds *at all*, is the server down?");
+					return;
+				}
+				SendMessage(room, root.root);
 			}
 		}
 	}
 
-	public void SendMessage(string id, string message) {
-		this.API.sendHTML(id, message);
+	public void JoinRoom(string roomid) {
+		if (API.getRooms.canFind(roomid)) return;
+		this.API.joinRoom(roomid);
+		SendMessage(roomid, "librem-buildbot has joined!");
+	}
+
+	public void onRoom(MatrixAPI api, string room, JSONValue context) {
+		if (context["sender"].str != api.userId) {
+			if ("body" in context["content"]) {
+				string[] command = context["content"]["body"].str.split(' ');
+				if (command[0] == "!join") {
+					if (command.length != 2) {
+						SendMessage(room, "**Invalid command usage!** `!join (room id)` is the right syntax c:");
+						return;
+					}
+					if (GetAdmin(context["sender"].str)) {
+						string roomid = command[1];
+						SendMessage(room, "*Joining now...*");
+						JoinRoom(roomid);
+					} else {
+						SendMessage(room, "**You do not have permission to invite this bot in to a room.**");
+						return;
+					}
+				}
+
+				if (command[0] == "!buildinfo") {
+					SendMessage(room, "*Wait a second, querying jenkins...*");
+					JobDescrBox root = GetJenkinsInfo();
+					if (root is null) {
+						SendMessage(room, "**ERROR** Could not find any builds *at all*, is the server down?");
+						return;
+					}
+					SendMessage(room, root.root);	
+				}
+			}
+		}
+	}
+
+	public bool GetAdmin(string senderid) {
+		return Administrators.canFind(senderid);
+	}
+
+	public void SendMessage(string roomid, JobDescrRoot root) {
+		if (root.number == BuildID) return;
+		string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName);
+		SendMessage(roomid, Format("**<0>'s queued QEMU build has completed!**\nResult: <1>\n\nDownload here: <2>", root.curlpits[0].fullName, root.result, artifact));
+	}
+
+	public void SendMessage(string roomid, string message) {
+		this.API.sendHTML(roomid, message);
 	}
 
 	public JobDescrBox GetJenkinsInfo() {

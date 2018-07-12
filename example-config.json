@@ -1,0 +1,12 @@
+{
+	"host": "example.com",
+	"username": "foo",
+	"password": "password",
+	"admins": [
+		"@bar@example.com"
+	],
+	"rooms": [
+		"!QWpqwojkfwejfwefkokwef@example.com"
+	],
+	"root": "job/Images/jon/Image Build/"
+}
