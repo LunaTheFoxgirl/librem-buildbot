@@ -3,7 +3,7 @@ import vibe.web.rest;
 
 public interface JenkinsRestBuildList {
 	struct Root {
-		Build[] Builds;
+		Build[] builds;
 	}
 	struct Build {
 		int number;
@@ -14,8 +14,8 @@ public interface JenkinsRestBuildList {
 		string url;
 	}
 
-	@path(":root/api/json?pretty=true")
-	Root getRoot(string _root);
+	@path("/api/json")
+	Root getRoot();
 }
 
 public enum JobResult : string {
@@ -39,11 +39,11 @@ public interface JenkinsRestJobDescription {
 		JobResult result;
 		ulong timestamp;
 		string url;
-		Curlpit[] curlpits;
+		Culprit[] culprits;
 	}
 
-	struct Curlpit {
-		string absoluteUri;
+	struct Culprit {
+		string absoluteUrl;
 		string fullName;
 	}
 
@@ -53,6 +53,6 @@ public interface JenkinsRestJobDescription {
 		string relativePath;
 	}
 
-	@path(":root/:id/api/json?pretty=true")
-	Root getRoot(string _root, int _id);
+	@path("/:id/api/json")
+	Root getRoot(int _id);
 }

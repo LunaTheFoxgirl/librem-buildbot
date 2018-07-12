@@ -4,6 +4,7 @@ import std.json;
 import std.string;
 import std.array;
 import core.thread;
+import std.stdio;
 import rest;
 import irest;
 import std.algorithm;
@@ -20,7 +21,7 @@ public class MatrixBOT {
 	public int BuildID = 0;
 	public string[] Rooms;
 	public string[] Administrators;
-	public int UpdateRate = 100;
+	public int UpdateRate = 1000;
 
 	JSONValue config;
 
@@ -41,10 +42,12 @@ public class MatrixBOT {
 		// Set newly generated token.
 		this.BotToken = this.API.token;
 
+		this.config = extraConfig;
+
 		string[] rooms = API.getRooms;
 		foreach(JSONValue room; extraConfig["rooms"].array()) {
 			Rooms ~= room.str;
-			if (rooms.canFind(room.str)) {
+			if (!rooms.canFind(room.str)) {
 				JoinRoom(room.str);
 			}
 		}
@@ -52,6 +55,8 @@ public class MatrixBOT {
 		foreach(JSONValue admin; extraConfig["admins"].array()) {
 			Administrators ~= admin.str;
 		}
+
+		Init(extraConfig["api_root"].str);
 
 		// Update, in case new rooms were joined.
 		rooms = API.getRooms;
@@ -123,8 +128,8 @@ public class MatrixBOT {
 
 	public void SendMessage(string roomid, JobDescrRoot root) {
 		if (root.number == BuildID) return;
-		string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName);
-		SendMessage(roomid, Format("**<0>'s queued QEMU build has completed!**\nResult: <1>\n\nDownload here: <2>", root.curlpits[0].fullName, root.result, artifact));
+		string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName).replace(" ", "%20");
+		SendMessage(roomid, Format("<b><0>'s queued QEMU build has completed!</b>\nResult: <1>\nDownload QEMU image here: <2>", root.culprits[0].fullName, root.result, artifact));
 	}
 
 	public void SendMessage(string roomid, string message) {
@@ -132,17 +137,25 @@ public class MatrixBOT {
 	}
 
 	public JobDescrBox GetJenkinsInfo() {
-		JenkinsRestBuildList.Root buildList = GetBuildList(config["api_root"].str);
+		JenkinsRestBuildList.Root buildList = GetBuildList();
 		bool isQemuBuild = false;
 		int iterator = 0;
 		JobDescrRoot descr;
 		while (!isQemuBuild) {
-			descr = GetJobDescription(config["api_root"].str, buildList.Builds[iterator].number);
-			if (descr.description == "qemu-x86_64.img.xz") {
+			try {
+				descr = GetJobDescription(buildList.builds[iterator].number);
+			} catch (Throwable) {
+				iterator++;
+				Thread.sleep( dur!("msecs")( 500 ));
+				continue;
+			}
+			writeln(descr.description);
+			if (descr.description == "qemu-x86_64 image") {
 				isQemuBuild = true;
 			}
 			iterator++;
-			if (iterator >= buildList.Builds.length) return null;
+			if (iterator >= buildList.builds.length) return null;
+			Thread.sleep( dur!("msecs")( 500 ));
 		}
 		return new JobDescrBox(descr);
 	}

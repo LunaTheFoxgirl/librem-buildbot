@@ -2,11 +2,12 @@ import bot;
 import std.file;
 import std.stdio;
 import std.json;
+import vibe.core.log;
 
 void main(string[] argsx) {
 	string location = "/var/librem-buildbot/config.json";
 	string[] args = argsx[1..$];
-	
+
 	if (args.length > 0) {
 		location = args[0];
 	}
