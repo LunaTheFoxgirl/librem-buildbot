@@ -76,7 +76,7 @@ public class MatrixBOT {
 			JobDescrBox root = GetJenkinsInfo();
 			foreach(room; API.getRooms) {
 				if (root is null) {
-					SendMessage(room, "**ERROR** Could not find any builds *at all*, is the server down?");
+					SendMessage(room, "**ERROR** Could not find any builds <i>at all</i>, is the server down?");
 					return;
 				}
 				SendMessage(room, root.root);
@@ -110,13 +110,13 @@ public class MatrixBOT {
 				}
 
 				if (command[0] == "!buildinfo") {
-					SendMessage(room, "*Wait a second, querying jenkins...*");
+					SendMessage(room, "<i>Wait a second, querying jenkins...</i>");
 					JobDescrBox root = GetJenkinsInfo();
 					if (root is null) {
 						SendMessage(room, "**ERROR** Could not find any builds *at all*, is the server down?");
 						return;
 					}
-					SendMessage(room, root.root);	
+					SendMessage(room, root.root, false);
 				}
 			}
 		}
@@ -126,10 +126,10 @@ public class MatrixBOT {
 		return Administrators.canFind(senderid);
 	}
 
-	public void SendMessage(string roomid, JobDescrRoot root) {
-		if (root.number == BuildID) return;
+	public void SendMessage(string roomid, JobDescrRoot root, bool avoid_resend = true) {
+		if (avoid_resend && root.number == BuildID) return;
 		string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName).replace(" ", "%20");
-		SendMessage(roomid, Format("<b><0>'s queued QEMU build has completed!</b>\nResult: <1>\nDownload QEMU image here: <2>", root.culprits[0].fullName, root.result, artifact));
+		if (avoid_resend) SendMessage(roomid, Format("<b><0>'s queued QEMU buildhas completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
 	}
 
 	public void SendMessage(string roomid, string message) {
