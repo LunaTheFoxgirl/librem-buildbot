@@ -21,7 +21,7 @@ public class MatrixBOT {
 	public int BuildID = 0;
 	public string[] Rooms;
 	public string[] Administrators;
-	public int UpdateRate = 1000;
+	public int UpdateRate = 300;
 
 	JSONValue config;
 
@@ -69,7 +69,7 @@ public class MatrixBOT {
 	public void Update() {
 		this.API.poll();
 		// Sleep for 100 milliseconds.
-		Thread.sleep( dur!("msecs")( 100 ));
+		Thread.sleep( dur!("msecs")( 1000 ));
 		updateCounter--;
 		if (updateCounter < 0) {
 			updateCounter = UpdateRate;
@@ -152,6 +152,7 @@ public class MatrixBOT {
 			writeln(descr.description);
 			if (descr.description == "qemu-x86_64 image") {
 				isQemuBuild = true;
+				BuildID = buildList.builds[iterator].number;
 			}
 			iterator++;
 			if (iterator >= buildList.builds.length) return null;
