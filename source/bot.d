@@ -20,9 +20,11 @@ public class MatrixBOT {
 
 	public int BuildID = 0;
 	private int oBuildId = 0;
+	private bool isBuilding = false;
 	public string[] Rooms;
 	public string[] Administrators;
-	public int UpdateRate = 300;
+	private int minUpdateRate = 300;
+	private int maxUpdateRate = 600;
 
 	JSONValue config;
 
@@ -73,7 +75,6 @@ public class MatrixBOT {
 		Thread.sleep( dur!("msecs")( 1000 ));
 		updateCounter--;
 		if (updateCounter < 0) {
-			updateCounter = UpdateRate;
 			JobDescrBox root = GetJenkinsInfo();
 			foreach(room; API.getRooms) {
 				if (root is null) {
@@ -82,7 +83,10 @@ public class MatrixBOT {
 				}
 				SendMessage(room, root.root);
 			}
-			BuildID = oBuildId;
+			if (!isBuilding) BuildID = oBuildId;
+
+			updateCounter = minUpdateRate;
+			if (isBuilding) updateCounter = maxUpdateRate;
 		}
 	}
 
@@ -130,8 +134,17 @@ public class MatrixBOT {
 
 	public void SendMessage(string roomid, JobDescrRoot root, bool avoid_resend = true) {
 		if (avoid_resend && root.number == BuildID) return;
-		string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName).replace(" ", "%20");
-		SendMessage(roomid, Format("<b><0>'s queued QEMU build has completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
+		if (root.building) isBuilding = true;
+		if (!isBuilding || !root.building) {
+			string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName).replace(" ", "%20");
+			SendMessage(roomid, Format("<b><0>'s queued QEMU build has completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
+			isBuilding = false;
+			return;
+		}
+		if (root.building) {
+			SendMessage(roomid, Format("<b><0>'s queued QEMU build is currently building!...</b>\nBuild ID: <1>", root.culprits[0].fullName, root.number));
+			return;
+		}
 	}
 
 	public void SendMessage(string roomid, string message) {
