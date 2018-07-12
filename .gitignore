@@ -9,6 +9,7 @@ librem-buildbot.a
 librem-buildbot.lib
 librem-buildbot-test-*
 librem-buildbot
+./librem-buildbot
 *.exe
 *.o
 *.obj
