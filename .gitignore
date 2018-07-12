@@ -8,6 +8,7 @@ librem-buildbot.dll
 librem-buildbot.a
 librem-buildbot.lib
 librem-buildbot-test-*
+librem-buildbot
 *.exe
 *.o
 *.obj

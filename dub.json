@@ -4,8 +4,12 @@
 		"Clipsey"
 	],
 	"dependencies": {
-		"vibe-d": "~>0.8.4",
-		"matrix-d-api": "~>1.0.1"
+		"vibe-d:web": "~master",
+		"vibe-d:tls": "~master",
+		"matrix-d-api": "~master"
+	},
+	"subConfigurations": {
+		"vibe-d:tls": "openssl-1.1"
 	},
 	"description": "A small matrix client bot that posts whenever a new build of PureOS (arm) is built.",
 	"copyright": "Copyright © 2018, Clipsey",
