@@ -19,6 +19,7 @@ public class MatrixBOT {
 	public string BotToken;
 
 	public int BuildID = 0;
+	private int oBuildId = 0;
 	public string[] Rooms;
 	public string[] Administrators;
 	public int UpdateRate = 300;
@@ -81,6 +82,7 @@ public class MatrixBOT {
 				}
 				SendMessage(room, root.root);
 			}
+			BuildID = oBuildId;
 		}
 	}
 
@@ -129,7 +131,7 @@ public class MatrixBOT {
 	public void SendMessage(string roomid, JobDescrRoot root, bool avoid_resend = true) {
 		if (avoid_resend && root.number == BuildID) return;
 		string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName).replace(" ", "%20");
-		if (avoid_resend) SendMessage(roomid, Format("<b><0>'s queued QEMU buildhas completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
+		SendMessage(roomid, Format("<b><0>'s queued QEMU buildhas completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
 	}
 
 	public void SendMessage(string roomid, string message) {
@@ -152,7 +154,7 @@ public class MatrixBOT {
 			writeln(descr.description);
 			if (descr.description == "qemu-x86_64 image") {
 				isQemuBuild = true;
-				BuildID = buildList.builds[iterator].number;
+				oBuildId = buildList.builds[iterator].number;
 			}
 			iterator++;
 			if (iterator >= buildList.builds.length) return null;
