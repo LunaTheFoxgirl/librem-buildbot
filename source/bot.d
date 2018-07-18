@@ -132,17 +132,31 @@ public class MatrixBOT {
 		return Administrators.canFind(senderid);
 	}
 
+	private string getCulpritsString(JenkinsRestJobDescription.Culprit[] culprits) {
+		string output = "<Server Trigger>";
+		if (culprits.length > 0) {
+			output = culprits[0].fullName~" ";
+			foreach (i; 1 .. culprits.length) {
+				if (i == culprits.length-1) output ~= culprits[i].fullName;
+				else if (i == culprits.length-2) output ~= culprits[i].fullName~" and ";
+				else output ~= culprits[i].fullName~", ";
+			}
+		}
+		return output;
+	}
+
 	public void SendMessage(string roomid, JobDescrRoot root, bool avoid_resend = true) {
 		if (avoid_resend && root.number == BuildID) return;
 		if (root.building) isBuilding = true;
+		string culprits = getCulpritsString(root.culprits);
 		if (!isBuilding || !root.building) {
 			string artifact = Format("<0><1><2>/artifact/<3>", "https://arm01.puri.sm/", config["api_root"].str, root.number, root.artifacts[0].fileName).replace(" ", "%20");
-			SendMessage(roomid, Format("<b><0>'s queued QEMU build has completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", root.culprits[0].fullName, root.number, root.result, artifact));
+			SendMessage(roomid, Format("<b><0>'s queued QEMU build has completed!</b>\nBuild ID: <1>\nResult: <2>\nDownload Here: <3>", culprits, root.number, root.result, artifact));
 			isBuilding = false;
 			return;
 		}
 		if (root.building) {
-			SendMessage(roomid, Format("<b><0>'s queued QEMU build is currently building!...</b>\nBuild ID: <1>", root.culprits[0].fullName, root.number));
+			SendMessage(roomid, Format("<b><0>'s queued QEMU build is currently building!...</b>\nBuild ID: <1>", culprits, root.number));
 			return;
 		}
 	}
