@@ -4,9 +4,16 @@ import std.stdio;
 import std.json;
 import vibe.core.log;
 
+// Uncomment the line below to enable extensive debug logging.
+//version = VERBOSE;
+
 void main(string[] argsx) {
 	string location = "/var/librem-buildbot/config.json";
 	string[] args = argsx[1..$];
+
+	version(VERBOSE) {
+		setLogLevel(LogLevel.trace);
+	}
 
 	if (args.length > 0) {
 		location = args[0];

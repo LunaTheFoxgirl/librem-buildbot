@@ -172,30 +172,34 @@ public class MatrixBOT {
 	}
 
 	public JobDescrBox GetJenkinsInfo() {
-		JenkinsRestBuildList.Root buildList = GetBuildList();
-		bool isQemuBuild = false;
-		int iterator = 0;
-		JobDescrRoot descr;
-		while (!isQemuBuild) {
-			try {
-				descr = GetJobDescription(buildList.builds[iterator].number);
-			} catch (Throwable) {
+		try {
+			JenkinsRestBuildList.Root buildList = GetBuildList();
+			bool isQemuBuild = false;
+			int iterator = 0;
+			JobDescrRoot descr;
+			while (!isQemuBuild) {
+				try {
+					descr = GetJobDescription(buildList.builds[iterator].number);
+				} catch (Throwable) {
+					iterator++;
+					Thread.sleep( dur!("msecs")( 500 ));
+					continue;
+				}
+				writeln(descr.description);
+				if (descr.description == "qemu-x86_64 image") {
+					isQemuBuild = true;
+					oBuildId = buildList.builds[iterator].number;
+				}
 				iterator++;
+				if (iterator >= buildList.builds.length) return null;
 				Thread.sleep( dur!("msecs")( 500 ));
-				continue;
 			}
-			writeln(descr.description);
-			if (descr.description == "qemu-x86_64 image") {
-				isQemuBuild = true;
-				oBuildId = buildList.builds[iterator].number;
-			}
-			iterator++;
-			if (iterator >= buildList.builds.length) return null;
-			Thread.sleep( dur!("msecs")( 500 ));
+			return new JobDescrBox(descr);
+		} catch(Exception ex) {
+			Thread.sleep( dur!("msecs")( 1000 ));
+			return GetJenkinsInfo();
 		}
-		return new JobDescrBox(descr);
 	}
-
 }
 
 class JobDescrBox {
