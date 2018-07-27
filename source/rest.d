@@ -19,6 +19,11 @@ public JenkinsRestJobDescription.Root GetJobDescription(int id) {
 	return job_desc.getRoot(id);
 }
 
+public static void Purge() {
+	destroy(build_list);
+	destroy(job_desc);
+}
+
 public static void Init(string root) {
 	string path = "https://arm01.puri.sm/"~(root.replace(" ", "%20"));
 	res_root = path;

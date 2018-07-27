@@ -73,20 +73,28 @@ public class MatrixBOT {
 		this.API.poll();
 		// Sleep for 100 milliseconds.
 		Thread.sleep( dur!("msecs")( 1000 ));
-		updateCounter--;
-		if (updateCounter < 0) {
-			JobDescrBox root = GetJenkinsInfo();
-			foreach(room; API.getRooms) {
-				if (root is null) {
-					SendMessage(room, "**ERROR** Could not find any builds <i>at all</i>, is the server down?");
-					return;
+		try {
+			updateCounter--;
+			if (updateCounter < 0) {
+				JobDescrBox root = GetJenkinsInfo();
+				foreach(room; API.getRooms) {
+					if (root is null) {
+						SendMessage(room, "**ERROR** Could not find any builds <i>at all</i>, is the server down?");
+						return;
+					}
+					SendMessage(room, root.root);
 				}
-				SendMessage(room, root.root);
-			}
-			if (!isBuilding) BuildID = oBuildId;
+				if (!isBuilding) BuildID = oBuildId;
 
+				updateCounter = minUpdateRate;
+				if (isBuilding) updateCounter = maxUpdateRate;
+			}
+		} catch (Throwable) {
+			writeln("OpenSSL choked, resetting connection...");
+			Purge();
+			Init(config["api_root"].str);
+			writeln("Connection re-established...");
 			updateCounter = minUpdateRate;
-			if (isBuilding) updateCounter = maxUpdateRate;
 		}
 	}
 
